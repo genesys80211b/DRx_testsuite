@@ -765,7 +765,7 @@ static void b_info_helper(const mxArray **info)
   emlrtAddField(*info, emlrtAliasP(rhs99), "rhs", 99);
   emlrtAddField(*info, emlrtAliasP(lhs99), "lhs", 99);
   emlrtAddField(*info, b_emlrt_marshallOut(
-    "[E]/usr/local/MATLAB/V39/drx/transceive202.m"), "context", 100);
+    "[E]/usr/local/MATLAB/V40_demo/drx/transceive202.m"), "context", 100);
   emlrtAddField(*info, b_emlrt_marshallOut("comm.SDRuReceiver"), "name", 100);
   emlrtAddField(*info, b_emlrt_marshallOut("char"), "dominantType", 100);
   emlrtAddField(*info, b_emlrt_marshallOut(
@@ -3912,7 +3912,7 @@ static void info_helper(const mxArray **info)
   emlrtAddField(*info, emlrtAliasP(rhs7), "rhs", 7);
   emlrtAddField(*info, emlrtAliasP(lhs7), "lhs", 7);
   emlrtAddField(*info, b_emlrt_marshallOut(
-    "[E]/usr/local/MATLAB/V39/drx/transceive202.m"), "context", 8);
+    "[E]/usr/local/MATLAB/V40_demo/drx/transceive202.m"), "context", 8);
   emlrtAddField(*info, b_emlrt_marshallOut("comm.SDRuTransmitter"), "name", 8);
   emlrtAddField(*info, b_emlrt_marshallOut("char"), "dominantType", 8);
   emlrtAddField(*info, b_emlrt_marshallOut(

@@ -23,22 +23,22 @@ static boolean_T hrx_not_empty;
 static comm_SDRuTransmitter htx;
 static boolean_T htx_not_empty;
 static emlrtRSInfo emlrtRSI = { 6, "transceive202",
-  "/usr/local/MATLAB/V39/drx/transceive202.m" };
+  "/usr/local/MATLAB/V40_demo/drx/transceive202.m" };
 
 static emlrtRSInfo b_emlrtRSI = { 11, "transceive202",
-  "/usr/local/MATLAB/V39/drx/transceive202.m" };
+  "/usr/local/MATLAB/V40_demo/drx/transceive202.m" };
 
 static emlrtRSInfo c_emlrtRSI = { 17, "transceive202",
-  "/usr/local/MATLAB/V39/drx/transceive202.m" };
+  "/usr/local/MATLAB/V40_demo/drx/transceive202.m" };
 
 static emlrtRSInfo d_emlrtRSI = { 18, "transceive202",
-  "/usr/local/MATLAB/V39/drx/transceive202.m" };
+  "/usr/local/MATLAB/V40_demo/drx/transceive202.m" };
 
 static emlrtRSInfo e_emlrtRSI = { 20, "transceive202",
-  "/usr/local/MATLAB/V39/drx/transceive202.m" };
+  "/usr/local/MATLAB/V40_demo/drx/transceive202.m" };
 
 static emlrtRSInfo f_emlrtRSI = { 22, "transceive202",
-  "/usr/local/MATLAB/V39/drx/transceive202.m" };
+  "/usr/local/MATLAB/V40_demo/drx/transceive202.m" };
 
 /* Function Definitions */
 void hrx_not_empty_init(void)

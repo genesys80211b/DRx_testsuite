@@ -1,4 +1,4 @@
-START_DIR = /usr/local/MATLAB/V39/drx
+START_DIR = /usr/local/MATLAB/V40_demo/drx
 
 MATLAB_ROOT = /usr/local/MATLAB/R2015b
 MAKEFILE = transceive202_mex.mk

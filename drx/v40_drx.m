@@ -1,9 +1,10 @@
-function drx_v39_BufferedRx_fifthUsrpFrame()
+function v40_drx()
 initParameters;
 % Designated Receiver Parameter Structure
 %prm = init_v35();
 % aip: IP Address for USRP attached to this machine as a 3-Digit uint8 
 %      (as of 2/19/15, valid values for N210's in Lab are 102, 103, or 202)
+global vm
 global aip addressTx
 addressTx = 100;
 aip = getipa();
@@ -84,11 +85,9 @@ sr  = uint8(211); %prm.DRxStateStart
 sm  = uint8(0); %#ok<NASGU>
 % hft: Function Handle to transceive() function for this IP Address
 trx = eval(sprintf('@transceive%3d_mex',aip));
-% vm: Verbose Mode: Displays additional text describing DRx actions
-vm  = logical(false(1));
 
 if (vm), fprintf(1,'Start DTx now.\n'); end
-while ~fe
+while (~fe)
     sm = sr/uint8(10);
     if (sm==uint8(21)) %prm.DRxStateRxDATA
         for x=1:numChunk
@@ -153,7 +152,10 @@ while ~fe
     elseif (sm==uint8(22)) %prm.DRxStateTxACK
         [d2s,fat,sr] = drx_2TransmitACK(ft,nsq,sr);
         if (sr==211)
-            fprintf('ACK Transmitted for packet %d\n\n',nsq);
+            if (vm), 
+                fprintf('ACK Packet Transmitted for DATA Packet %d\n\n',nsq);
+                %fprintf(datestr(now, 'HH:MM:SS:FFF\n'));
+            end
         end
         trx(d2s,ft,txGain, rxGain, centerFreqTx, centerFreqRx, intFactor, decFactor);
         if (fat) 
@@ -162,7 +164,7 @@ while ~fe
             if (nib >= ril)
                 % If ACK Tx'd & #image bits>=expected image len, set exit flag
                 fe = logical(true(1));
-                % Change DRx State to Terminal State: no more Tx/Rx performed
+                % Chancge DRx State to Terminal State: no more Tx/Rx performed
                 sr = uint8(240); %prm.DRxStateEOT
                 % Record an Event to denote image is fully received
                 cev = cev+uint16(1);
@@ -187,6 +189,8 @@ while ~fe
         % Change DRx State to Terminal State: no more Tx/Rx performed
         sr = uint8(240); %prm.DRxStateEOT
     end
+    
+   
 end % End While ~EOTFLAG
 % Clear persistent data within all helper functions
 ft = logical(true(1));
@@ -195,51 +199,43 @@ drx_1ReceiveDATA(df,ft,sr);
 drx_2TransmitACK(ft,nsq,sr);
 clear('ddd','drx_1ReceiveDATA','drx_2TransmitACK','preambleDet','rffe','sms');
 clear(sprintf('transceive%3d_mex',aip));
-if (vm && (cev>uint16(0)))
-    % For each Event in Log, display information about the event
-    for it = (uint16(1):cev)
-        fprintf(1,'At iteration #%d, ',evl(it,1));
-        if (evl(it,2)==uint16(1)) % Flag #1
-            fprintf(1,'detected preamble with synch delay %d.\n',evl(it,3));
-        elseif (evl(it,2)==uint16(2)) || (evl(it,2)==uint16(6)) % Flag #2
-            fprintf(1,'found PLCP header with LENGTH %d.\n',evl(it,3));
-            if (evl(it,2)==uint16(6)) % Flag #3
-                fprintf(1,'At iteration #%d, CRC ERROR.\n',evl(it,1));
-            end
-        elseif (evl(it,2)==uint16(8)) % Flag #4
-            fprintf(1,'found MAC header with Sequence# %d.\n',evl(it,3));
-        elseif (evl(it,2)==uint16(16)) % Flag #5
-            fprintf(1,'found full payload in %d USRP frames.\n',evl(it,3));
-        elseif (evl(it,2)==uint16(32)) % Flag #6
-            if isequal(de2bi(double(evl(it,3)),8).',[0;0;0;1;1;1;0;1])
-                fprintf(1,'found ACK frame control.\n');
-            else
-                fprintf(1,'found non-DATA frame control:');
-                fprintf(1,'%d ',de2bi(double(evl(it,3))));
-                fprintf(1,'.\n');
-            end
-        elseif (evl(it,2)==uint16(64)) % Flag #7: FCS Error==64
-            fprintf(1,'FCS ERROR for Sequence #%d.\n',evl(it,3));
-        elseif (evl(it,2)==uint16(128)) % Flag #8: Found All Image==128
-            fprintf(1,'found expected #image bits in %d 802.11 frames.\n',evl(it,3));
-        elseif (evl(it,2)==uint16(256)) % Flag #9: Timeout == 256
-            fprintf(1,'exiting due to Timeout after %d idle iterations.\n',evl(it,3));
-        else
-            fprintf(1,'UNKNOWN EVENT-ID:%d-VAL:%d.\n',evl(it,2),evl(it,3));
-        end
-    end % END FOR IT=0:CEV
-end % END IF V
+% if (vm && (cev>uint16(0)))
+%     % For each Event in Log, display information about the event
+%     for it = (uint16(1):cev)
+%         fprintf(1,'At iteration #%d, ',evl(it,1));
+%         if (evl(it,2)==uint16(1)) % Flag #1
+%             fprintf(1,'Detected preamble with SYNC delay %d.\n',evl(it,3));
+%         elseif (evl(it,2)==uint16(2)) || (evl(it,2)==uint16(6)) % Flag #2
+%             fprintf(1,'Found PLCP header with LENGTH %d.\n',evl(it,3));
+%             if (evl(it,2)==uint16(6)) % Flag #3
+%                 fprintf(1,'At iteration #%d, CRC ERROR.\n',evl(it,1));
+%             end
+%         elseif (evl(it,2)==uint16(8)) % Flag #4
+%             fprintf(1,'Found MAC header with Sequence# %d.\n',evl(it,3));
+%         elseif (evl(it,2)==uint16(16)) % Flag #5
+%             fprintf(1,'Found full payload in %d USRP frames.\n',evl(it,3));
+%         elseif (evl(it,2)==uint16(32)) % Flag #6
+%             if isequal(de2bi(double(evl(it,3)),8).',[0;0;0;1;1;1;0;1])
+%                 fprintf(1,'Found ACK frame control.\n');
+%             else
+%                 fprintf(1,'Found non-DATA frame control:');
+%                 fprintf(1,'%d ',de2bi(double(evl(it,3))));
+%                 fprintf(1,'.\n');
+%             end
+%         elseif (evl(it,2)==uint16(64)) % Flag #7: FCS Error==64
+%             fprintf(1,'FCS ERROR for Sequence #%d.\n',evl(it,3));
+%         elseif (evl(it,2)==uint16(128)) % Flag #8: Found All Image==128
+%             fprintf(1,'Found expected #image bits in %d 802.11 frames.\n',evl(it,3));
+%         elseif (evl(it,2)==uint16(256)) % Flag #9: Timeout == 256
+%             fprintf(1,'Exiting due to Timeout after %d idle iterations.\n',evl(it,3));
+%         else
+%             fprintf(1,'UNKNOWN EVENT-ID:%d-VAL:%d.\n',evl(it,2),evl(it,3));
+%         end
+%     end % END FOR IT=0:CEV
+% end % END IF V
 
 % if ((nib >= 32))
-%     showData(choice, nib, rib);
-%     
-%     % If all image bits received, display message and recovered image
-%     fprintf(1,'Full Image of %d bits Received. Exiting... \n',nib);
-%     if 1%(ri3 == 1)
-%         rid = bi2gim(rib,nib);
-%         figure(128);
-%         imshow(rid);
-%     end
+%      showData(choice, nib, rib);
 % end
 
 return;
@@ -265,7 +261,7 @@ function [dfl,flg,nrb,rbs,sr] = drx_1ReceiveDATA(df,ft,sr)
 % Setting global variables
 global halfUsrpFrameLength numUsrpBits doubleUsrpFrameLength ...
     numMpduBits numMacHdrBits numFcsBits numSuperBits numSuperFrameBits ...
-    addressTx aip
+    addressTx aip vm numPayloadBits
 
 % Persistent Data: Maintained between function calls to drx_1ReceiveData
 % chf: Header Frame Count: Counts #USRP frames that have header info (0-2)
@@ -308,7 +304,7 @@ end % END IF ISEMPTY(HCD)
 if isempty(i1b),    i1b = uint8(1);                 end
 if isempty(i1s),    i1s = uint16(1);                end
 if isempty(nmb),    nmb = uint16(numMpduBits+numSuperBits);      end
-if isempty(npf),    npf = uint8(ceil((nmb-numUsrpBits)/numUsrpBits));               end
+if isempty(npf),    npf = uint8(ceil((nmb-(numMacHdrBits))/numUsrpBits));               end
 if isempty(rb),     rb  = complex(zeros(doubleUsrpFrameLength,1));   end
 % Local Function Data: Overwritten on every call to drx_1ReceiveData
 cra = zeros(41,1);
@@ -324,7 +320,7 @@ flg = logical(false(1,6));
 flt = logical(false(1,1)); %#ok<NASGU>
 ips = uint16(0); %#ok<NASGU>
 nrb = uint16(0);
-rbs = zeros(numMacHdrBits,1);
+rbs = zeros(numUsrpBits,1);
 if (ft)
     release(hcd);
     %clear('hcd'); % Not supported for code generation
@@ -405,16 +401,17 @@ else
                     chf = chf-uint8(1);
                 end
                 % Calculate number of Payload Frames from MPDU length
-                npf = ceil((nmb-numUsrpBits)/numUsrpBits);
+                npf = ceil((nmb-(numMacHdrBits))/numUsrpBits);
             elseif (chf==uint8(2)) %prm.NumHeaderFrames
                 % Process frame control in MAC Header
                 if isequal(dfb(i1b:(i1b+15),1),[0;0;1;0;0;0;0;0;0;0;0;0;0;0;0;0])
-                    fprintf(1,'Packet Received!');
-                    fprintf(1,'\n');
-                    fprintf(1,'Frame control:');%%%%************Checking frame control at DRx
-                    fprintf(1,'%d',dfb(i1b:(i1b+15),1));
-                    fprintf(1,'\n');
-                    
+                    if (vm),
+                        fprintf(1,'DATA Packet Received!');
+                        fprintf(1,'\n');
+                        fprintf(1,'DATA Packet''s Frame Control Readout:');%%%%************Checking frame control at DRx
+                        fprintf(1,'%d',dfb(i1b:(i1b+15),1));
+                        fprintf(1,'\n');
+                    end
                     % Pass back all MAC bits, Header+Payload+FCS
                     rbs(1:numUsrpBits) = dfb(i1b:(i1b+numUsrpBits-1));
                     nrb = uint16(numUsrpBits);
@@ -424,9 +421,6 @@ else
                     flg(1,4) = logical(true(1));
                     % Pass back Sequence Number in Flagged Data, dfl
                     dfl = uint16(n8f);
-              
-%                     sr  = uint8(213); %prm.DRxStateRxGetPayload
-                    
                 else
                     % Set flag #6: ffc true when MAC Frame Control ~DATA
                     flg(1,6) = logical(true(1));
@@ -445,15 +439,20 @@ else
                 %extract addresses
                 addressRx = str2double(strcat(num2str(bi2de(dfb(i1b:(i1b+7)).')),num2str(bi2de(dfb(i1b+8:(i1b+15)).'))));
                 addressTx = str2double(strcat(num2str(bi2de(dfb(i1b+48:(i1b+55)).')),num2str(bi2de(dfb(i1b+56:(i1b+63)).'))));
+                addressRxString = strcat(num2str(bi2de(dfb(i1b:(i1b+7)).')),'.',num2str(bi2de(dfb(i1b+8:(i1b+15)).')));
+                addressTxString = strcat(num2str(bi2de(dfb(i1b+48:(i1b+55)).')),'.',num2str(bi2de(dfb(i1b+56:(i1b+63)).')));
                 %print addresses
-                fprintf(1,'To Address: %d \n',addressRx);
-                fprintf(1,'From Address: %d \n',addressTx);
-                
+                if (vm),
+                    fprintf(1,'To Address read out from DATA: 192.168.%s \n',addressRxString);
+                    fprintf(1,'From Address read out from DATA: 192.168.%s \n',addressTxString);
+                end
                 %if packet is addressed to this receiver
                 if addressRx == aip
-                    sr  = uint8(213); %prm.DRxStateRxGetPayload
+%                     sr  = uint8(213); %prm.DRxStateRxGetPayload
+                    rbs(1:numUsrpBits) = dfb(i1b:(i1b+numUsrpBits-1));
+                    nrb = uint16(numUsrpBits);
                 else
-                    fprintf('wrong address, reset and to searchpreamble\n');
+                    if (vm), fprintf('Wrong MAC Address, Resetting to Detect Preamble..\n'); end
                     % Set flag #6: ffc true when MAC Frame Control ~DATA
                     flg(1,6) = logical(true(1));
                     % Send back the Frame Control Received in dfl
@@ -465,16 +464,26 @@ else
                     rb(1:doubleUsrpFrameLength) = complex(zeros(doubleUsrpFrameLength,1));
                 end
                 
+                %pass back Address3 frame
+            elseif (chf==uint8(4))
+                rbs(1:numUsrpBits) = dfb(i1b:(i1b+numUsrpBits-1));
+                nrb = uint16(numUsrpBits);
+                %pass back Sequence Control + Address4 + beginning of Payload
+            elseif (chf==uint8(5))
+                rbs(1:numUsrpBits) = dfb(i1b:(i1b+numUsrpBits-1));
+                nrb = uint16(numUsrpBits);
+                %move to GetPayload state
+                sr  = uint8(213); %prm.DRxStateRxGetPayload
+                
             end % END IF CH==#
             
         elseif (sr==uint8(213)) %prm.DRxStateRxGetPayload
-                
             % Update Payload Frame Count
             cpf = cpf+uint8(1);
             if (cpf<npf) %prm.NumPayloadFrames
                 % Store All Payload Bits in rbs and update bit count nrb
                 nrb = uint16(numUsrpBits);
-                rbs(1:numUsrpBits) = dfb(i1b:(i1b+numUsrpBits-1));     
+                rbs(1:numUsrpBits) = dfb(i1b:(i1b+numUsrpBits-1));
             else  % On last payload frame for this 802.11b frame, 
                 % Calculate #bits to return from remainder after division
                 % of #MPDU bits by 64 bits/USRPframe
@@ -488,6 +497,9 @@ else
                 dfl = uint16(npf);
                 % Change Major State from Rx DATA to Tx ACK
                 sr = uint8(220); %prm.DRxStateTxACKSendACK
+                if (vm),
+                %fprintf(datestr(now, 'HH:MM:SS:FFF\n'));
+                end
                 % Reset all count variables internal to function
                 chf = uint8(0);
                 cpf = uint8(0);
